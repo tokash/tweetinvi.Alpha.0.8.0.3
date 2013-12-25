@@ -204,10 +204,10 @@ namespace TwitterToken
                     if (XRateLimitRemaining == 0)
                     {
                         //wait 15 minutes
-                        Console.WriteLine("Rate Limit Reached, Sleeping for 15 minutes..."); 
+                        String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, url);
+                        Console.WriteLine(message); 
                         System.Threading.Thread.Sleep(900000);
-                        Console.WriteLine("Woke up...");
-
+                        Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                     }
                 }
 
