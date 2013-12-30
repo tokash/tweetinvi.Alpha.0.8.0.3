@@ -175,6 +175,31 @@ namespace oAuthConnection
                     response.Close();
                     httpWebRequest.Abort();
                 }
+                else if (wex.Message.Contains("401"))
+                {
+                    Console.WriteLine("Got 401 error from twitter, waiting 1 second...");
+                    System.Threading.Thread.Sleep(1000);
+
+                    httpWebRequest = GetQueryWebRequest(url, httpMethod, headers);
+                    httpWebRequest.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+
+                    // Opening the connection
+                    response = httpWebRequest.GetResponse();
+                    Stream stream = response.GetResponseStream();
+
+                    _lastHeadersResult = response.Headers;
+
+                    if (stream != null)
+                    {
+                        // Getting the result
+                        StreamReader responseReader = new StreamReader(stream);
+                        result = responseReader.ReadLine();
+                    }
+
+                    // Closing the connection
+                    response.Close();
+                    httpWebRequest.Abort();
+                }
                 else
                 {
                     if (exceptionHandler != null)
@@ -194,7 +219,7 @@ namespace oAuthConnection
                     if (httpWebRequest != null)
                     {
                         httpWebRequest.Abort();
-                    } 
+                    }
                 }
             }
 

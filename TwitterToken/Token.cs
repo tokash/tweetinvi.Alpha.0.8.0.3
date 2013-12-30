@@ -200,6 +200,7 @@ namespace TwitterToken
                 if (_lastHeadersResult["X-Rate-Limit-Remaining"] != null)
                 {
                     XRateLimitRemaining = Int32.Parse(_lastHeadersResult["X-Rate-Limit-Remaining"]);
+                    Console.WriteLine(string.Format("Url:{0}\nRemaining calls: {1}", url, XRateLimitRemaining));
 
                     if (XRateLimitRemaining == 0)
                     {
@@ -352,7 +353,7 @@ namespace TwitterToken
             long previousCursor = cursor;
             long nextCursor = -1;
 
-            while (previousCursor != nextCursor)
+            while (previousCursor != nextCursor && nextCursor != 0)
             {
                 try
                 {
