@@ -282,7 +282,7 @@
     <comment>User Get</comment>
   </data>
   <data name="User_GetUserTimeline" xml:space="preserve">
-    <value>http://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=1&amp;include_entities=true&amp;count=200&amp;user_id={0}</value>
+    <value>https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=1&amp;include_entities=true&amp;count=200&amp;user_id={0}</value>
     <comment>User Timeline</comment>
   </data>
 </root>

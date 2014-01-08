@@ -861,9 +861,16 @@ namespace Tweetinvi
             };
 
 
-            while (FollowerIds.Count < numIDsToGet)
+            try
             {
-                token.ExecuteCustomCursorQuery(query, cursor, del, null);
+                while (FollowerIds.Count < numIDsToGet)
+                {
+                    token.ExecuteCustomCursorQuery(query, cursor, del, null);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
 
             return FollowerIds;
