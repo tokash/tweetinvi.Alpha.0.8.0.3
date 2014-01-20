@@ -179,6 +179,10 @@ namespace oAuthConnection
                 {
                     Console.WriteLine(String.Format("{0}: Unauthorized operation for user : {1}...", DateTime.Now, url));
                 }
+                else if (wex.Message.Contains("500"))
+                {
+                    Console.WriteLine(String.Format("{0}: Twitter server returned Internal Server Error : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                }
                 else
                 {
                     if (exceptionHandler != null)
