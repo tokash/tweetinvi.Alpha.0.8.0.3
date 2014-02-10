@@ -7,6 +7,7 @@ using TweetinCore.Enum;
 using TweetinCore.Events;
 using TweetinCore.Interfaces.oAuth;
 using oAuthConnection.Utils;
+using Tweetinvi;
 
 namespace oAuthConnection
 {
@@ -131,7 +132,7 @@ namespace oAuthConnection
 
                 // Opening the connection
                 response = httpWebRequest.GetResponse();
-                Stream stream = response.GetResponseStream();
+                System.IO.Stream stream = response.GetResponseStream();
 
                 _lastHeadersResult = response.Headers;
 
@@ -148,60 +149,130 @@ namespace oAuthConnection
             }
             catch (WebException wex)
             {
-                if (wex.Message.Contains("429"))
+                int? statusNumber =  Tweetinvi.Utils.ExceptionUtils.GetWebExceptionStatusNumber(wex);
+
+                if(statusNumber != null)
                 {
-                    //wait 15 minutes
-                    Console.WriteLine("Rate Limit Reached in GetUserTimeline, Sleeping for 15 minutes...");
-                    System.Threading.Thread.Sleep(900000);
-                    Console.WriteLine("Woke up...");
-
-                    httpWebRequest = GetQueryWebRequest(url, httpMethod, headers);
-                    httpWebRequest.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
-
-                    // Opening the connection
-                    response = httpWebRequest.GetResponse();
-                    Stream stream = response.GetResponseStream();
-
-                    _lastHeadersResult = response.Headers;
-
-                    if (stream != null)
+                    switch (statusNumber)
                     {
-                        // Getting the result
-                        StreamReader responseReader = new StreamReader(stream);
-                        result = responseReader.ReadLine();
-                    }
+                        case 429:
+                            //wait 15 minutes then retry the call
+                            Console.WriteLine("Rate Limit Reached in GetUserTimeline, Sleeping for 15 minutes...");
+                            System.Threading.Thread.Sleep(900000);
+                            Console.WriteLine("Woke up...");
 
-                    // Closing the connection
-                    response.Close();
-                    httpWebRequest.Abort();
-                }
-                else if (wex.Message.Contains("401"))
-                {
-                    Console.WriteLine(String.Format("{0}: Unauthorized operation for user : {1}...", DateTime.Now, url));
-                }
-                else if (wex.Message.Contains("500"))
-                {
-                    Console.WriteLine(String.Format("{0}: Twitter server returned Internal Server Error : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
-                }
-                else
-                {
-                    if (exceptionHandler != null)
-                    {
-                        exceptionHandler(wex);
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                            httpWebRequest = GetQueryWebRequest(url, httpMethod, headers);
+                            httpWebRequest.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
 
-                    if (response != null)
-                    {
-                        response.Close();
-                    }
+                            // Opening the connection
+                            response = httpWebRequest.GetResponse();
+                            System.IO.Stream stream = response.GetResponseStream();
 
-                    if (httpWebRequest != null)
-                    {
-                        httpWebRequest.Abort();
+                            _lastHeadersResult = response.Headers;
+
+                            if (stream != null)
+                            {
+                                // Getting the result
+                                StreamReader responseReader = new StreamReader(stream);
+                                result = responseReader.ReadLine();
+                            }
+
+                            // Closing the connection
+                            response.Close();
+                            httpWebRequest.Abort();
+                            break;
+                        case 401:
+                            Console.WriteLine(String.Format("{0}: Unauthorized operation for user : {1}...", DateTime.Now, url));
+                            break;
+                        case 403: //Forbidden
+                            Console.WriteLine(String.Format("{0}: Twitter server refused or access is not allowed : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            break;
+                        case 404: //Not found
+                            Console.WriteLine(String.Format("{0}: The URI requested is invalid or the resource requested, such as a user, does not exists : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            break;
+                        case 406: //Not acceptable
+                            Console.WriteLine(String.Format("{0}: Invalid format specified in the request. : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            break;
+                        case 410: //Gone
+                            Console.WriteLine(String.Format("{0}: This resource is gone, requests to this endpoint will yield no results from now on. : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            break;
+                        case 500:
+                            Console.WriteLine(String.Format("{0}: Twitter server returned Internal Server Error : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            break;
+                        case 502: //Bad gateway - Twitter is down
+                            Console.WriteLine(String.Format("{0}: Twitter servers are down or being upgraded: {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            throw;
+                            break;
+                        case 503: //Service unavailable
+                            Console.WriteLine(String.Format("{0}: Twitter servers are up but overloaded with requests : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            System.Threading.Thread.Sleep(1000);
+
+                            httpWebRequest = GetQueryWebRequest(url, httpMethod, headers);
+                            httpWebRequest.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+
+                            // Opening the connection
+                            response = httpWebRequest.GetResponse();
+                            stream = response.GetResponseStream();
+
+                            _lastHeadersResult = response.Headers;
+
+                            if (stream != null)
+                            {
+                                // Getting the result
+                                StreamReader responseReader = new StreamReader(stream);
+                                result = responseReader.ReadLine();
+                            }
+
+                            // Closing the connection
+                            response.Close();
+                            httpWebRequest.Abort();
+                            //throw;
+                            break;
+                        case 504: //Gateway timeout
+                            Console.WriteLine(String.Format("{0}: The Twitter servers are up, but the request couldn't be serviced due to some failure : {1},\nData will not be retrieved for: {2}", DateTime.Now, wex.Message.ToString(), url));
+                            System.Threading.Thread.Sleep(1000);
+
+                            httpWebRequest = GetQueryWebRequest(url, httpMethod, headers);
+                            httpWebRequest.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+
+                            // Opening the connection
+                            response = httpWebRequest.GetResponse();
+                            stream = response.GetResponseStream();
+
+                            _lastHeadersResult = response.Headers;
+
+                            if (stream != null)
+                            {
+                                // Getting the result
+                                StreamReader responseReader = new StreamReader(stream);
+                                result = responseReader.ReadLine();
+                            }
+
+                            // Closing the connection
+                            response.Close();
+                            httpWebRequest.Abort();
+                            //throw;
+                            break;
+                        default:
+                            if (exceptionHandler != null)
+                            {
+                                exceptionHandler(wex);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+
+                            if (response != null)
+                            {
+                                response.Close();
+                            }
+
+                            if (httpWebRequest != null)
+                            {
+                                httpWebRequest.Abort();
+                            }
+                            break;
                     }
                 }
             }

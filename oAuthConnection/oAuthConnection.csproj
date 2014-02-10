@@ -53,6 +53,10 @@
       <Project>{2da9c20d-e072-4152-beee-11feaff61e0f}</Project>
       <Name>TweetinCore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tweetinvi\Tweetinvi.csproj">
+      <Project>{58567cc3-67d4-47bd-94d8-1e1e5cdd71c6}</Project>
+      <Name>Tweetinvi</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

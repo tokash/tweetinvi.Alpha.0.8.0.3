@@ -21,25 +21,31 @@ namespace Tweetinvi.Utils
                 return null;
             }
 
-            int indexOfStatus = wex.Response.Headers.AllKeys.ToList().IndexOf("status");
-
-            if (indexOfStatus == -1)
+            try
             {
-                indexOfStatus = wex.Response.Headers.AllKeys.ToList().IndexOf("Status");
+                int indexOfStatus = wex.Response.Headers.AllKeys.ToList().IndexOf("status");
+
+                if (indexOfStatus == -1)
+                {
+                    indexOfStatus = wex.Response.Headers.AllKeys.ToList().IndexOf("Status");
+                }
+
+                if (indexOfStatus == -1)
+                {
+                    return null;
+                }
+
+                string statusValue = wex.Response.Headers.Get(indexOfStatus);
+                char[] t = new[] { ' ' };
+                string[] statusContent = statusValue.Split(t);
+
+                if (statusContent.Length > 0)
+                {
+                    return Convert.ToInt32(statusContent[0]);
+                }
             }
-
-            if (indexOfStatus == -1)
+            catch (Exception)
             {
-                return null;
-            }
-
-            string statusValue = wex.Response.Headers.Get(indexOfStatus);
-            char[] t = new[] { ' ' };
-            string[] statusContent = statusValue.Split(t);
-
-            if (statusContent.Length > 0)
-            {
-                return Convert.ToInt32(statusContent[0]);
             }
 
             return null;
