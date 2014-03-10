@@ -1101,6 +1101,89 @@ namespace Tweetinvi
             return timeline;
         }
 
+        /// <summary>
+        /// Retrieve the timeline of the current user from the Twitter API.
+        /// Update the corresponding attribute if required by the parameter createTimeline.
+        /// Return the timeline of the current user
+        /// This method does paging- it gets all the tweets until a certain point set by the user
+        /// </summary>
+        /// <returns>Null if there is no user token, the timeline of the current user otherwise</returns>
+        public List<ITweet> GetUserTimelineCursored(bool createUserTimeline = false, IToken token = null)
+        {
+            // Handle the possible exceptions thrown by the Twitter API
+            WebExceptionHandlingDelegate wexDel = delegate(WebException wex)
+            {
+                // Get the exception status number
+                int? wexStatusNumber = ExceptionUtils.GetWebExceptionStatusNumber(wex);
+                if (wexStatusNumber == null)
+                {
+                    if (wex.Message.Contains("429"))
+                    {
+                        Console.WriteLine("Rate Limit Reached, Sleeping for 15 minutes...");
+                        System.Threading.Thread.Sleep(900000);
+                        Console.WriteLine("Woke up...");
+                        throw wex;
+                    }
+                }
+
+                switch (wexStatusNumber)
+                {
+                    case 429:
+                        //Rate limit reached. Throw a new Exception with a specific message
+                        throw new WebException("Rate limit is reached", wex);
+
+                    case 401:
+                        break;
+                    default:
+                        //Throw the exception "as-is"
+                        throw wex;
+                }
+            };
+
+            _token = token;
+
+            return GetUserTimelineCursored(_token, wexDel, createUserTimeline);
+        }
+
+        /// <summary>
+        /// Retrieve the timeline of the current user from the Twitter API.
+        /// Update the corresponding attribute if required by the parameter createTimeline.
+        /// Return the timeline of the current user
+        /// </summary>
+        /// <param name="token">Token of the current user</param>
+        /// <param name="wexDelegate">Handler of WebException thrown by the Twitter API</param>
+        /// <param name="createTimeline">False by default. If true, the attribute _timeline is updated with the result</param>
+        /// <returns>Null if the user token is null, the timeline of the user represented by the token otherwise</returns>
+        private List<ITweet> GetUserTimelineCursored(IToken token,
+            WebExceptionHandlingDelegate wexDelegate = null,
+            bool createTimeline = false)
+        {
+            token = GetQueryToken(token);
+
+            if (token == null)
+            {
+                Console.WriteLine("Token must be specified");
+                return null;
+            }
+
+            List<ITweet> timeline = new List<ITweet>();
+
+            ObjectResponseDelegate tweetDelegate = delegate(Dictionary<string, object> tweetContent)
+            {
+                Tweet t = new Tweet(tweetContent, _shareTokenWithChild ? _token : null);
+                timeline.Add(t);
+            };
+
+            token.ExecuteSinceMaxQuery(String.Format(Resources.User_GetUserTimeline, Id), tweetDelegate, wexDelegate);
+
+            if (createTimeline)
+            {
+                _timeline = timeline;
+            }
+
+            return timeline;
+        }
+
         #endregion
 
         #region Get Favourites

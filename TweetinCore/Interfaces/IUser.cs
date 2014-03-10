@@ -389,6 +389,14 @@ namespace TweetinCore.Interfaces
         /// <returns>Null if there is no user token, the timeline of the current user otherwise</returns>
         List<ITweet> GetUserTimeline(bool createUserTimeline = false, IToken token = null);
 
+        /// <summary>
+        /// Retrieve the timeline of the current user from the Twitter API.
+        /// Update the corresponding attribute if required by the parameter createTimeline.
+        /// Return the timeline of the current user
+        /// </summary>
+        /// <returns>Null if there is no user token, the timeline of the current user otherwise</returns>
+        List<ITweet> GetUserTimelineCursored(bool createUserTimeline = false, IToken token = null);
+
         #endregion
 
         #endregion

@@ -8,6 +8,7 @@ using TweetinCore.Interfaces;
 using Tweetinvi.Properties;
 using Tweetinvi.TwitterEntities;
 using Tweetinvi.Utils;
+using TwitterUserTimeLine;
 
 namespace Tweetinvi
 {
@@ -907,7 +908,58 @@ namespace Tweetinvi
                 InReplyToUserId = dTweet.GetProp("in_reply_to_user_id") as int?;
                 InReplyToUserIdStr = dTweet.GetProp("in_reply_to_user_id_str") as string;
                 InReplyToScreenName = dTweet.GetProp("in_reply_to_screen_name") as string;
-                Creator = User.Create(dTweet.GetProp("user"));
+
+                try
+                {
+                    Creator = User.Create(dTweet.GetProp("user"));
+                }
+                catch (Exception)
+                {
+                    TwitterUserTimeLine.User user = (TwitterUserTimeLine.User)dTweet.GetProp("user");
+                    Dictionary<string, object> dUser = new Dictionary<string, object>();
+                    dUser.Add("contributors_enabled", user.contributors_enabled);
+                    dUser.Add("created_at", user.created_at);
+                    dUser.Add("default_profile", user.default_profile);
+                    dUser.Add("default_profile_image", user.default_profile_image);
+                    dUser.Add("description", user.description);
+                    dUser.Add("entities", user.entities);
+                    dUser.Add("favourites_count", user.favourites_count);
+                    dUser.Add("follow_request_sent", user.follow_request_sent);
+                    dUser.Add("followers_count", user.followers_count);
+                    dUser.Add("following", user.following);
+                    dUser.Add("friends_count", user.friends_count);
+                    dUser.Add("geo_enabled", user.geo_enabled);
+                    dUser.Add("id", user.id);
+                    dUser.Add("id_str", user.id_str);
+                    dUser.Add("is_translation_enabled", user.is_translation_enabled);
+                    dUser.Add("is_translator", user.is_translator);
+                    dUser.Add("lang", user.lang);
+                    dUser.Add("listed_count", user.listed_count);
+                    dUser.Add("location", user.location);
+                    dUser.Add("name", user.name);
+                    dUser.Add("notifications", user.notifications);
+                    dUser.Add("profile_background_color", user.profile_background_color);
+                    dUser.Add("profile_background_image_url", user.profile_background_image_url);
+                    dUser.Add("profile_background_image_url_https", user.profile_background_image_url_https);
+                    dUser.Add("profile_background_tile", user.profile_background_tile);
+                    dUser.Add("profile_banner_url", user.profile_banner_url);
+                    dUser.Add("profile_image_url", user.profile_image_url);
+                    dUser.Add("profile_image_url_https", user.profile_image_url_https);
+                    dUser.Add("profile_link_color", user.profile_link_color);
+                    dUser.Add("profile_sidebar_border_color", user.profile_sidebar_border_color);
+                    dUser.Add("profile_sidebar_fill_color", user.profile_sidebar_fill_color);
+                    dUser.Add("profile_text_color", user.profile_text_color);
+                    dUser.Add("profile_use_background_image", user.profile_use_background_image);
+                    dUser.Add("@protected", user.@protected);
+                    dUser.Add("screen_name", user.screen_name);
+                    dUser.Add("statuses_count", user.statuses_count);
+                    dUser.Add("time_zone", user.time_zone);
+                    dUser.Add("url", user.url);
+                    dUser.Add("utc_offset", user.utc_offset);
+                    dUser.Add("verified", user.verified);
+
+                    Creator = User.Create(dUser);
+                }
 
                 if (_shareTokenWithChild)
                 {
@@ -931,7 +983,30 @@ namespace Tweetinvi
 
                 if (dTweet.ContainsKey("entities"))
                 {
-                    Entities = new TweetEntities(dTweet["entities"] as Dictionary<String, object>);
+                    Dictionary<string, object> dEntities = new Dictionary<string, object>();
+                    try
+                    {
+                        Entities = new TweetEntities(dEntities);
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            TwitterUserTimeLine.Entities2 entities = (TwitterUserTimeLine.Entities2)dTweet.GetProp("entities");
+                            
+                            dEntities.Add("hashtags", entities.hashtags);
+                            dEntities.Add("symbols", entities.symbols);
+                            dEntities.Add("urls", entities.urls);
+                            dEntities.Add("user_mentions", entities.user_mentions);
+
+                            Entities = new TweetEntities(dEntities);
+                        }
+                        catch (Exception)
+                        {
+                            
+                            //throw;
+                        }
+                    }
                 }
 
                 Favourited = dTweet.GetProp("favorited") as bool?;
